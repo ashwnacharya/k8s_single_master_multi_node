@@ -3,6 +3,7 @@
 all:
   vars:
     pod_network_cidr: 192.168.32.40/28
+    master_ip: 192.168.32.42
   children:
     master:
       hosts:

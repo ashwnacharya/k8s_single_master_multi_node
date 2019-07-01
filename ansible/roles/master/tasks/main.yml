@@ -10,7 +10,7 @@
 
 - name: Run kubeadm init
   become: True
-  shell: "kubeadm init --pod-network-cidr={{ pod_network_cidr }}"
+  shell: "kubeadm init --pod-network-cidr={{ pod_network_cidr }} --apiserver-advertise-address={{ master_ip }}"
 
 - name: Print the join command
   become: True
