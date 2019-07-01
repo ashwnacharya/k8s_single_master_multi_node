@@ -1,0 +1,9 @@
+---
+
+- name: Adds a hello world file
+  copy:
+    src: hello-world-minions.txt
+    dest: /tmp/hello-world-minions.txt
+    owner: vagrant
+    group: vagrant
+    mode: 0644

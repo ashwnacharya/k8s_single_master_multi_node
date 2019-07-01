@@ -1,0 +1,9 @@
+---
+
+- name: Adds a hello world file
+  copy:
+    src: hello-world-master.txt
+    dest: /tmp/hello-world-master.txt
+    owner: vagrant
+    group: vagrant
+    mode: 0644

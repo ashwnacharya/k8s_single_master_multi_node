@@ -1,0 +1,16 @@
+---
+
+- name: Hello world on all nodes
+  hosts: all
+  roles:
+    - common
+
+- name: Hello world on master
+  hosts: master
+  roles:
+    - master
+
+- name: Hello world on minions
+  hosts: minions
+  roles:
+    - minion
