@@ -1,9 +1,115 @@
 ---
 
-- name: Adds a hello world file
-  copy:
-    src: hello-world-common.txt
-    dest: /tmp/hello-world-common.txt
-    owner: vagrant
-    group: vagrant
-    mode: 0644
+- name: Ensure dependencies for k8s and docker
+  yum:
+    name: ['yum-utils', 'device-mapper-persistent-data', 'lvm2']
+    state: installed
+
+
+- name: Ensure Docker-CE repository
+  shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+
+# Refer https://github.com/rootsongjc/kubernetes-vagrant-centos-cluster/issues/12
+- name: Add the br_netfilter module using modprobe
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - overlay
+    - br_netfilter
+
+- name: Ensure k8s repository
+  yum_repository:
+    name: kubernetes
+    description: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey: ['https://packages.cloud.google.com/yum/doc/yum-key.gpg ', 'https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg']
+    exclude: "kube*"
+
+
+- name: Ensure ip6tables sysctl entry
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: '1'
+    sysctl_file: /etc/sysctl.d/k8s.conf
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+
+- name: Ensure iptables sysctl entry
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: '1'
+    sysctl_file: /etc/sysctl.d/k8s.conf
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Ensure iptables sysctl entry for the containerd cri
+  sysctl:
+    name: "{{ item }}"
+    value: '1'
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items:
+    - net.bridge.bridge-nf-call-iptables
+    - net.ipv4.ip_forward
+    - net.bridge.bridge-nf-call-ip6tables
+
+
+
+- name: Put SELinux in permissive mode
+  selinux:
+    policy: targeted
+    state: permissive
+    configfile: /etc/selinux/config
+
+- name: Disable SWAP since kubernetes can't work with swap enabled
+  shell: |
+    swapoff -a
+
+- name: Disable SWAP in fstab
+  mount:
+    path: "swap"
+    src: "/dev/mapper/centos-swap"
+    fstype: "swap"
+    opts: "defaults"
+    state: absent
+
+
+- name: Install k8s and docker
+  yum:
+    name: ['containerd.io', 'kubelet', 'kubeadm', 'kubectl']
+    disable_excludes: 'kubernetes'
+    state: installed
+
+
+- name: create the /etc/containerd directory
+  file:
+    path: /etc/containerd
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: configure containerd
+  shell: containerd config default > /etc/containerd/config.toml
+
+- name: Enable and start containerd
+  systemd:
+    name: containerd
+    state: started
+    enabled: yes
+
+- name: Enable and start k8s
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes

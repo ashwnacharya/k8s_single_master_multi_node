@@ -4,13 +4,19 @@
   hosts: all
   roles:
     - common
+  become: True
+  become_user: root
 
 - name: Hello world on master
   hosts: master
   roles:
     - master
+  become: True
+  become_user: root
 
 - name: Hello world on minions
   hosts: minions
   roles:
     - minion
+  become: True
+  become_user: root
