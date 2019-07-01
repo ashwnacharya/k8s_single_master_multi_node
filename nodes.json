@@ -1,0 +1,68 @@
+{
+    "nodes": {
+        "master-1": {
+            "ports": [
+                {
+                    ":host": 2342,
+                    ":guest": 22,
+                    ":id": "ssh"
+                }
+            ],
+            "network_configs": [
+                {
+                    ":ip": "192.168.32.42",
+                    ":name": "vboxnet0",
+                    ":adapter": 2
+                }
+            ]
+        },
+        "minion-1": {
+            "ports": [
+                {
+                    ":host": 2343,
+                    ":guest": 22,
+                    ":id": "ssh"
+                }
+            ],
+            "network_configs": [
+                {
+                    ":ip": "192.168.32.43",
+                    ":name": "vboxnet0",
+                    ":adapter": 2
+                }
+            ]
+        },
+        "minion-2": {
+            "ports": [
+                {
+                    ":host": 2344,
+                    ":guest": 22,
+                    ":id": "ssh"
+                }
+            ],
+            "network_configs": [
+                {
+                    ":ip": "192.168.32.44",
+                    ":name": "vboxnet0",
+                    ":adapter": 2
+                }
+            ]
+        },
+        "minion-3": {
+            "ports": [
+                {
+                    ":host": 2345,
+                    ":guest": 22,
+                    ":id": "ssh"
+                }
+            ],
+            "network_configs": [
+                {
+                    ":ip": "192.168.32.45",
+                    ":name": "vboxnet0",
+                    ":adapter": 2
+                }
+            ]
+        }
+    }
+}
