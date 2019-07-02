@@ -2,7 +2,7 @@
 
 all:
   vars:
-    pod_network_cidr: 192.168.32.40/28
+    pod_network_cidr: 192.168.32.40/16
     master_ip: 192.168.32.42
   children:
     master:
@@ -13,7 +13,7 @@ all:
           ansible_private_key_file: ../.vagrant/machines/master-1/virtualbox/private_key
     minions:
       hosts:
-        minion-:
+        minion-1:
           ansible_host: 127.0.0.1
           ansible_port: 2343
           ansible_private_key_file: ../.vagrant/machines/minion-1/virtualbox/private_key
