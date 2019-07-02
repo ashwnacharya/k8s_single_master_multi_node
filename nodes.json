@@ -6,6 +6,11 @@
                     ":host": 2342,
                     ":guest": 22,
                     ":id": "ssh"
+                },
+                {
+                    ":host": 8001,
+                    ":guest": 8001,
+                    ":id": "kubeproxy"
                 }
             ],
             "network_configs": [
