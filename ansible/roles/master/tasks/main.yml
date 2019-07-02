@@ -45,3 +45,27 @@
 - name: Install calico
   shell: kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/calico.yaml
 
+
+- name: Copy the python script to check pod status
+  copy:
+    src: check_pod_status.py
+    dest: /tmp/check_pod_status.py
+    owner: vagrant
+    group: vagrant
+    mode: 0644
+
+- name: Wait for the pods to be ready
+  shell: "kubectl get pods --all-namespaces -o json | python /tmp/check_pod_status.py >> /tmp/output.txt"
+  register: pod_status
+  retries: 20
+  delay: 15
+  until: pod_status.rc == 0
+
+- name: Remove the python script to check pod status
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - /tmp/check_pod_status.py
+    - /tmp/output.txt
+
