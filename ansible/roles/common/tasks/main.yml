@@ -1,5 +1,16 @@
 ---
 
+- name: Add IP address of all hosts to all hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '.*{{ item }}$'
+    line: "{{ hostvars[item].ip }} {{item}}"
+    state: present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+  become: yes
+  become_user: root
+
 - name: Ensure dependencies for k8s and docker
   yum:
     name: ['yum-utils', 'device-mapper-persistent-data', 'lvm2']
