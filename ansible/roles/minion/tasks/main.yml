@@ -1,9 +1,14 @@
 ---
 
-- name: Adds a hello world file
-  copy:
-    src: hello-world-minions.txt
-    dest: /tmp/hello-world-minions.txt
-    owner: vagrant
-    group: vagrant
-    mode: 0644
+# Disable it for now till we figure out the exact firewall configuration that is needed.
+- name: Configure firewall
+  become: True
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+
+- name: Run kubeadm join
+  shell: "{{ hostvars[groups['master'][0]].kubeadm_join_command }}"
+  become: True
+  become_user: root
