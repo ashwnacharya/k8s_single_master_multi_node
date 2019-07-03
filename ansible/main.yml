@@ -1,18 +1,18 @@
 ---
 
-- name: Hello world on all nodes
+- name: Common steps on all the nodes
   hosts: all
   roles:
     - common
   become: True
   become_user: root
 
-- name: Hello world on master
+- name: Configure the master nodes
   hosts: master
   roles:
     - master
 
-- name: Hello world on minions
+- name: Configure the minions
   hosts: minions
   roles:
     - minion
