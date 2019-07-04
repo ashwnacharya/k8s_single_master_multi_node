@@ -126,7 +126,49 @@
     path: /tmp/linux-amd64
 
 
-- name: Initialize helm 
-  shell: helm init --upgrade
+- name: create tiller service account
+  shell: kubectl create serviceaccount --namespace kube-system tiller
 
+
+- name: Create cluster role binding for tiller service account
+  shell: kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller 
+
+
+- name: Initialize helm
+  shell: helm init --service-account tiller --upgrade
+
+
+- name: Update  service account
+  shell: kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+
+- name: Remove taint on master so that tiller can run there
+  shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+
+- name: Add helm repo
+  shell: helm repo add storageos https://charts.storageos.com
+
+
+- name: Wait for tiller
+  shell: kubectl -n kube-system get pod | grep tiller | awk '{print $3}'
+  register: tiller_status
+  retries: 20
+  delay: 15
+  until: tiller_status.stdout == 'Running'
+
+- name: Install storageos
+  shell: helm install storageos/storageos --name=storageos --namespace=storageos --set cluster.join="minion-1\,minion-2\,minion-3" --set rbac.create=true
+
+
+- name: Get cluster ip
+  shell: kubectl get svc/storageos --namespace storageos -o custom-columns=IP:spec.clusterIP --no-headers=true
+  register: cluster_ip
+
+
+- name: Get api address
+  shell: "echo -n \"tcp://{ cluster_ip.stdout }}:5705\" | base64"
+  register: api_address
+
+
+- name: patch secret
+  shell: 'kubectl patch secret/storageos-api --namespace storageos --patch "{\"data\": { \"apiAddress\": \"{{ api_address.stdout }}\"} }"'
 
