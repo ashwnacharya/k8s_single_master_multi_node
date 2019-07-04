@@ -71,8 +71,7 @@
 
 
 - name: Install the kubernetes dashboard
-  shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/master/aio/deploy/recommended/kubernetes-dashboard.yaml
-
+  shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 
 - name: Create an admin account called k8s-admin
   shell: kubectl --namespace kube-system create serviceaccount k8s-admin
