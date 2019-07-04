@@ -25,9 +25,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       network_configs.each do |network_config|
         config.vm.network "private_network", 
-            :ip => network_config[':ip'], 
-            :name => network_config[':name'], 
-            :adapter => network_config[':adapter']
+          ip: network_config[':ip'], 
+          name: network_config[':name'], 
+          adapter: network_config[':adapter'], 
+          netmask: network_config[':netmask']
       end
 
       # configures all forwarding ports in JSON array
