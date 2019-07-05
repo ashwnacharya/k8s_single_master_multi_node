@@ -168,7 +168,18 @@
   shell: "echo -n \"tcp://{ cluster_ip.stdout }}:5705\" | base64"
   register: api_address
 
+- name: Wait for storageos to start
+  shell: kubectl -n storageos get pod | grep storageos | awk '{print $3}'
+  register: storageos_status
+  retries: 20
+  delay: 15
+  until: storageos_status.stdout == 'Running'
 
 - name: patch secret
   shell: 'kubectl patch secret/storageos-api --namespace storageos --patch "{\"data\": { \"apiAddress\": \"{{ api_address.stdout }}\"} }"'
+
+
+- name: Make storage class the default one
+  shell: kubectl patch storageclass fast -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
 

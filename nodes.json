@@ -11,6 +11,11 @@
                     ":host": 8001,
                     ":guest": 8001,
                     ":id": "kubeproxy"
+                },
+                {
+                    ":host": 5705,
+                    ":guest": 5705,
+                    ":id": "storageos-dashboard"
                 }
             ],
             "network_configs": [
