@@ -15,7 +15,7 @@
             ],
             "network_configs": [
                 {
-                    ":ip": "192.168.32.42",
+                    ":ip": "192.167.32.42",
                     ":netmask": "255.255.0.0",
                     ":name": "vboxnet0",
                     ":adapter": 2
@@ -32,7 +32,7 @@
             ],
             "network_configs": [
                 {
-                    ":ip": "192.168.32.43",
+                    ":ip": "192.167.32.43",
                     ":netmask": "255.255.0.0",
                     ":name": "vboxnet0",
                     ":adapter": 2
@@ -49,7 +49,7 @@
             ],
             "network_configs": [
                 {
-                    ":ip": "192.168.32.44",
+                    ":ip": "192.167.32.44",
                     ":netmask": "255.255.0.0",
                     ":name": "vboxnet0",
                     ":adapter": 2
@@ -66,7 +66,7 @@
             ],
             "network_configs": [
                 {
-                    ":ip": "192.168.32.45",
+                    ":ip": "192.167.32.45",
                     ":netmask": "255.255.0.0",
                     ":name": "vboxnet0",
                     ":adapter": 2
