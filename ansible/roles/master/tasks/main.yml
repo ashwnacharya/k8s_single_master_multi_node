@@ -1,185 +1,20 @@
 ---
 
-# Disable it for now till we figure out the exact firewall configuration that is needed.
-- name: Configure firewall
-  become: True
-  systemd:
-    name: firewalld
-    state: stopped
-    enabled: no
+- name: Initialize the cluster
+  import_tasks: init_cluster.yml
 
-- name: Run kubeadm init
-  become: True
-  shell: "kubeadm init --pod-network-cidr=\"{{ pod_network_cidr }}\" --apiserver-advertise-address=\"{{ master_ip }}\" --apiserver-cert-extra-sans=\"{{ master_ip }}\" --node-name master-1"
+- name: Configure .kube directory for kubectl
+  import_tasks: configure_kubectl.yml
 
-- name: Print the join command
-  become: True
-  shell: kubeadm token create --print-join-command
-  register: token_create_output
+- name: Install and configure calico
+  import_tasks: calico.yml
 
+- name: Install and configure the admin dashboard
+  import_tasks: admin_dashboard.yml
 
-- name: Set join command as fact
-  set_fact: 
-    kubeadm_join_command: "{{ token_create_output.stdout }}"
+- name: Install helm and tiller in the master
+  import_tasks: helm.yml
 
-
-- name: Create the .kube directory
-  file:
-    path: /home/vagrant/.kube
-    state: directory
-    mode: 0755
-    owner: vagrant
-    group: vagrant
-
-
-- name: Copy kube config to .kube
-  copy:
-    src: /etc/kubernetes/admin.conf
-    dest: /home/vagrant/.kube/config
-    remote_src: True
-    owner: vagrant
-    group: vagrant
-    mode: 0644
-  become: True
-
-- name: Install calico
-  shell: kubectl apply -f https://docs.projectcalico.org/v3.7/manifests/calico.yaml
-
-
-- name: Copy the python script to check pod status
-  copy:
-    src: check_pod_status.py
-    dest: /tmp/check_pod_status.py
-    owner: vagrant
-    group: vagrant
-    mode: 0644
-
-- name: Wait for the pods to be ready
-  shell: "kubectl get pods --all-namespaces -o json | python /tmp/check_pod_status.py >> /tmp/output.txt"
-  register: pod_status
-  retries: 20
-  delay: 15
-  until: pod_status.rc == 0
-
-- name: Remove the python script to check pod status
-  file:
-    state: absent
-    path: "{{ item }}"
-  with_items:
-    - /tmp/check_pod_status.py
-    - /tmp/output.txt
-
-
-- name: Install the kubernetes dashboard
-  shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
-
-- name: Create an admin account called k8s-admin
-  shell: kubectl --namespace kube-system create serviceaccount k8s-admin
-
-
-- name: create clusterrolebinding k8s-admin
-  shell: kubectl create clusterrolebinding k8s-admin --serviceaccount=kube-system:k8s-admin --clusterrole=cluster-admin
-
-
-- name: Install kubectl service
-  copy:
-    src: kubeproxy.service
-    dest: /usr/lib/systemd/system/kubeproxy.service
-    owner: root
-    group: root
-    mode: 0644
-  become: True
-  become_user: root
-
-
-- name: Start the kubectl service
-  systemd:
-    state: started
-    enabled: True
-    daemon_reload: yes
-    name: kubeproxy
-  become: True
-
-
-- name: Download helm package manager
-  unarchive:
-    src: https://get.helm.sh/helm-v2.14.1-linux-amd64.tar.gz
-    dest: /tmp
-    remote_src: yes
-
-- name: Move helm and tiller binaries to /usr/local/bin
-  copy:
-    src: "/tmp/linux-amd64/{{ item }}"
-    dest: /usr/local/bin
-    remote_src: True
-    owner: root
-    group: root
-    mode: 0755
-  become: True
-  with_items:
-    - helm
-    - tiller
-
-- name: Remove the unarchived helm package folder from temp
-  file:
-    state: absent
-    path: /tmp/linux-amd64
-
-
-- name: create tiller service account
-  shell: kubectl create serviceaccount --namespace kube-system tiller
-
-
-- name: Create cluster role binding for tiller service account
-  shell: kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller 
-
-
-- name: Initialize helm
-  shell: helm init --service-account tiller --upgrade
-
-
-- name: Update  service account
-  shell: kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
-
-- name: Remove taint on master so that tiller can run there
-  shell: kubectl taint nodes --all node-role.kubernetes.io/master-
-
-- name: Add helm repo
-  shell: helm repo add storageos https://charts.storageos.com
-
-
-- name: Wait for tiller
-  shell: kubectl -n kube-system get pod | grep tiller | awk '{print $3}'
-  register: tiller_status
-  retries: 20
-  delay: 15
-  until: tiller_status.stdout == 'Running'
-
-- name: Install storageos
-  shell: helm install storageos/storageos --name=storageos --namespace=storageos --set cluster.join="minion-1\,minion-2\,minion-3" --set rbac.create=true
-
-
-- name: Get cluster ip
-  shell: kubectl get svc/storageos --namespace storageos -o custom-columns=IP:spec.clusterIP --no-headers=true
-  register: cluster_ip
-
-
-- name: Get api address
-  shell: "echo -n \"tcp://{ cluster_ip.stdout }}:5705\" | base64"
-  register: api_address
-
-- name: Wait for storageos to start
-  shell: kubectl -n storageos get pod | grep storageos | awk '{print $3}'
-  register: storageos_status
-  retries: 20
-  delay: 15
-  until: storageos_status.stdout == 'Running'
-
-- name: patch secret
-  shell: 'kubectl patch secret/storageos-api --namespace storageos --patch "{\"data\": { \"apiAddress\": \"{{ api_address.stdout }}\"} }"'
-
-
-- name: Make storage class the default one
-  shell: kubectl patch storageclass fast -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-
+- name: Install and configure storageOS
+  import_tasks: storageos.yml
 

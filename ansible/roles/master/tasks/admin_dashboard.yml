@@ -1,0 +1,33 @@
+---
+
+
+
+- name: Install the kubernetes dashboard
+  shell: kubectl create -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+
+- name: Create an admin account called k8s-admin
+  shell: kubectl --namespace kube-system create serviceaccount k8s-admin
+
+
+- name: create clusterrolebinding k8s-admin
+  shell: kubectl create clusterrolebinding k8s-admin --serviceaccount=kube-system:k8s-admin --clusterrole=cluster-admin
+
+
+- name: Install kubeproxy service
+  copy:
+    src: kubeproxy.service
+    dest: /usr/lib/systemd/system/kubeproxy.service
+    owner: root
+    group: root
+    mode: 0644
+  become: True
+  become_user: root
+
+
+- name: Start the kubeproxy service
+  systemd:
+    state: started
+    enabled: True
+    daemon_reload: yes
+    name: kubeproxy
+  become: True

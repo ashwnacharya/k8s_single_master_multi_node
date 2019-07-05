@@ -1,0 +1,53 @@
+---
+
+- name: Download helm package manager
+  unarchive:
+    src: https://get.helm.sh/helm-v2.14.1-linux-amd64.tar.gz
+    dest: /tmp
+    remote_src: yes
+
+- name: Move helm and tiller binaries to /usr/local/bin
+  copy:
+    src: "/tmp/linux-amd64/{{ item }}"
+    dest: /usr/local/bin
+    remote_src: True
+    owner: root
+    group: root
+    mode: 0755
+  become: True
+  with_items:
+    - helm
+    - tiller
+
+
+- name: Remove the unarchived helm package folder from temp
+  file:
+    state: absent
+    path: /tmp/linux-amd64
+
+
+- name: create tiller service account
+  shell: kubectl create serviceaccount --namespace kube-system tiller
+
+
+- name: Create cluster role binding for tiller service account
+  shell: kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller 
+
+
+- name: Initialize helm
+  shell: helm init --service-account tiller --upgrade
+
+
+- name: Update  service account
+  shell: kubectl patch deploy --namespace kube-system tiller-deploy -p '{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+
+
+- name: Remove taint on master so that tiller can run there
+  shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+
+- name: Wait for tiller
+  shell: kubectl -n kube-system get pod | grep tiller | awk '{print $3}'
+  register: tiller_status
+  retries: 20
+  delay: 15
+  until: tiller_status.stdout == 'Running'

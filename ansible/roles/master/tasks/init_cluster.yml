@@ -1,0 +1,24 @@
+---
+
+# Disable it for now till we figure out the exact firewall configuration that is needed.
+- name: Configure firewall
+  become: True
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+
+- name: Run kubeadm init
+  become: True
+  shell: "kubeadm init --pod-network-cidr=\"{{ pod_network_cidr }}\" --apiserver-advertise-address=\"{{ master_ip }}\" --apiserver-cert-extra-sans=\"{{ master_ip }}\" --node-name master-1"
+
+- name: Print the join command
+  become: True
+  shell: kubeadm token create --print-join-command
+  register: token_create_output
+
+
+- name: Set join command as fact
+  set_fact: 
+    kubeadm_join_command: "{{ token_create_output.stdout }}"
+
