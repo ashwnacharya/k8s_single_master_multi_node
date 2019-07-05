@@ -15,6 +15,3 @@
 - name: Install helm and tiller in the master
   import_tasks: helm.yml
 
-- name: Install and configure storageOS
-  import_tasks: storageos.yml
-

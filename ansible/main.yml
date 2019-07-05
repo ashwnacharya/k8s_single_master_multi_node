@@ -18,3 +18,9 @@
     - minion
   become: True
   become_user: root
+
+
+- name: Configure StorageOS
+  hosts: master
+  roles:
+    - storageos

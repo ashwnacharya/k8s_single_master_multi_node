@@ -5,8 +5,7 @@
 
 
 - name: Install storageos
-  shell: helm install storageos/storageos --name=storageos --namespace=storageos --set cluster.join="minion-1\,minion-2\,minion-3" --set rbac.create=true
-
+  shell: helm install storageos/storageos --name=storageos --namespace=storageos --set cluster.join="{{ "\,".join(groups['minions']) }}" --set rbac.create=true
 
 - name: Get cluster ip
   shell: kubectl get svc/storageos --namespace storageos -o custom-columns=IP:spec.clusterIP --no-headers=true
@@ -19,11 +18,11 @@
 
 
 - name: Wait for storageos to start
-  shell: kubectl -n storageos get pod | grep storageos | awk '{print $3}'
+  shell: kubectl -n storageos get pod | grep storageos | awk '{print $3}' | grep -cow 'Running'
   register: storageos_status
-  retries: 20
+  retries: 40
   delay: 15
-  until: storageos_status.stdout == 'Running'
+  until: storageos_status.stdout == '4'
 
 
 - name: patch secret
@@ -32,4 +31,5 @@
 
 - name: Make storage class the default one
   shell: kubectl patch storageclass fast -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
 
