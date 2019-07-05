@@ -16,6 +16,21 @@
                     ":host": 5705,
                     ":guest": 5705,
                     ":id": "storageos-dashboard"
+                },
+                {
+                    ":host": 9090,
+                    ":guest": 9090,
+                    ":id": "prometheus"
+                },
+                {
+                    ":host": 9093,
+                    ":guest": 9093,
+                    ":id": "alertmanager"
+                },
+                {
+                    ":host": 3000,
+                    ":guest": 3000,
+                    ":id": "grafana"
                 }
             ],
             "network_configs": [

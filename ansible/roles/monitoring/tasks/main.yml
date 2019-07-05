@@ -1,0 +1,81 @@
+---
+
+- name: Pull the kube-prometheus repo
+  git:
+    repo: 'https://github.com/coreos/kube-prometheus.git'
+    dest: /home/vagrant/kube-prometheus
+    update: no
+
+
+- name: Create the monitoring stack
+  shell: kubectl create -f /home/vagrant/kube-prometheus/manifests/
+  ignore_errors: True
+
+- name: Sleep for sometime, cos the documentation wait check is wrong
+  pause:
+    minutes: 5
+
+
+- name: Create the monitoring stack again, as per the documentation, because of the race condition
+  shell: kubectl create -f /home/vagrant/kube-prometheus/manifests/
+  ignore_errors: True
+
+- name: Install prometheus service
+  copy:
+    src: prometheus.service
+    dest: /usr/lib/systemd/system/prometheus.service
+    owner: root
+    group: root
+    mode: 0644
+  become: True
+  become_user: root
+
+
+- name: Start the prometheus service
+  systemd:
+    state: started
+    enabled: True
+    daemon_reload: yes
+    name: prometheus
+  become: True
+
+
+- name: Install alertmanager service
+  copy:
+    src: alertmanager.service
+    dest: /usr/lib/systemd/system/alertmanager.service
+    owner: root
+    group: root
+    mode: 0644
+  become: True
+  become_user: root
+
+
+- name: Start the alertmanager service
+  systemd:
+    state: started
+    enabled: True
+    daemon_reload: yes
+    name: alertmanager
+  become: True
+
+
+- name: Install grafana service
+  copy:
+    src: grafana.service
+    dest: /usr/lib/systemd/system/grafana.service
+    owner: root
+    group: root
+    mode: 0644
+  become: True
+  become_user: root
+
+
+- name: Start the grafana service
+  systemd:
+    state: started
+    enabled: True
+    daemon_reload: yes
+    name: grafana
+  become: True
+

@@ -13,7 +13,7 @@
 
 - name: Ensure dependencies for k8s and docker
   yum:
-    name: ['yum-utils', 'device-mapper-persistent-data', 'lvm2']
+    name: ['yum-utils', 'device-mapper-persistent-data', 'lvm2', 'git']
     state: installed
 
 

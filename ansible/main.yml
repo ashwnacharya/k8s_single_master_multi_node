@@ -24,3 +24,8 @@
   hosts: master
   roles:
     - storageos
+
+- name: Configure Monitoring
+  hosts: master
+  roles:
+    - monitoring
