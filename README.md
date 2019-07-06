@@ -18,3 +18,8 @@ Run
 $ cd ansible
 $ ansible-playbook main.yml -i inventories/local
 ```
+
+# To connect to the cluster using kubectl
+Copy the file `/home/vagrant/.kube/config` to your `~/.kube` directory.
+Then use kubectl as usual.
+
