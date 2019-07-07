@@ -13,7 +13,7 @@
 
 
 - name: Get api address
-  shell: "echo -n \"tcp://{ cluster_ip.stdout }}:5705\" | base64"
+  shell: echo -n "tcp://{{ cluster_ip.stdout }}:5705" | base64
   register: api_address
 
 
